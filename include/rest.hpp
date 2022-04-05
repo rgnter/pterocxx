@@ -36,8 +36,8 @@ namespace pterocxx {
     struct rest_response_s {
     public:
         std::string version;
-        uint32_t code = -1;
-        std::string message;
+        uint32_t status_code = -1;
+        std::string status_detail;
 
         std::string body;
         std::unordered_map<std::string, std::string> headers;

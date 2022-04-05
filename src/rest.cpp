@@ -4,17 +4,83 @@
 
 #include "rest.hpp"
 #include <charconv>
+#include <iostream>
+#include <regex>
 
 namespace pterocxx {
 
 
-    rest_response_s parse_raw_response(const uint8_t * data,
-                                       size_t data_length) {
+    rest_response_s parse_raw_response(const std::string &raw_response) {
         rest_response_s response{};
+
+        // regex matches
+        std::regex line_regex("\r\n");
+        std::regex status_regex(" ");
+        std::regex header_regex(":");
+
+        // line iterator
+        std::sregex_token_iterator line_iterator(raw_response.begin(),
+                                                 raw_response.end(),
+                                                 line_regex, -1);
+        std::sregex_token_iterator line_iterator_end;
+        uint32_t line_index =  0;
+        do {
+            line_index++;
+            std::string line = *line_iterator++;
+            if(line_index == 1)
+            {
+                try {
+                // read status header
+                std::sregex_token_iterator entry_iterator(line.begin(),
+                                                          line.end(),
+                                                          status_regex, -1);
+                std::string version = *entry_iterator;
+                std::string status_code_raw   = *++entry_iterator;
+                std::string status_detail = *++entry_iterator;
+
+                uint32_t status_code = 0;
+                std::from_chars(status_code_raw.c_str(),
+                                status_code_raw.c_str()+status_code_raw.length(),
+                                status_code);
+                response.version       = std::move(version);
+                response.status_code   = status_code;
+                response.status_detail = std::move(status_detail);
+
+                } catch(const std::exception& ignored) {
+                    throw std::exception("Invalid HTTP status header");
+                }
+            } else
+            {
+                try {
+                    std::sregex_token_iterator header_iterator(line.begin(),
+                                                               line.end(),
+                                                               header_regex, -1);
+                    std::sregex_token_iterator header_iterator_end;
+
+                    std::string key = *header_iterator++;
+                    if(header_iterator == header_iterator_end)
+                        break;
+                    std::string val = *header_iterator;
+                    if (key.starts_with(" "))
+                        key = key.substr(1);
+                    if (val.starts_with(" "))
+                        val = val.substr(1);
+                    if (key.ends_with(" "))
+                        key = key.substr(0, key.length() - 2);
+                    if (val.ends_with(" "))
+                        val = val.substr(0, val.length() - 2);
+
+                    response.headers[key] = val;
+                } catch(const std::exception& ignored) {
+                    throw std::exception("Invalid HTTP header");
+                }
+            }
+
+        } while(line_iterator != line_iterator_end);
         return response;
     }
 
-    rest::rest(const std::string& host,
+    rest::rest(const std::string &host,
                const uint16_t port) : host(host), port(port) {
         {
             boost::system::error_code error;
@@ -22,16 +88,16 @@ namespace pterocxx {
             asio::ip::tcp::resolver::query resolver_query(host, "https");
             asio::ip::tcp::resolver resolver(io_ctx);
             auto results = resolver.resolve(resolver_query, error);
-            if(error) {
+            if (error) {
                 printf("Rest ctor ERROR: Couldn't resolve address / %d - %s\n", error.value(), error.message().c_str());
                 return;
             }
 
             // could be better ipv6 and ipv4 resolution
-            for(const auto& endpoint : results) {
-               this->remote = endpoint;
-               this->remote.port(port);
-               break;
+            for (const auto &endpoint: results) {
+                this->remote = endpoint;
+                this->remote.port(port);
+                break;
             }
         }
 
@@ -46,12 +112,12 @@ namespace pterocxx {
     }
 
     void rest::init() {
-        if(connection == nullptr)
+        if (connection == nullptr)
             return;
 
         boost::system::error_code error;
         this->connection->lowest_layer().connect(this->remote, error);
-        if(error) {
+        if (error) {
             printf("Rest connect ERROR:  %d - %s\n", error.value(), error.message().c_str());
             return;
         }
@@ -59,9 +125,9 @@ namespace pterocxx {
         this->io_ctx.run();
     }
 
-    void rest::request(const rest_request_s& request,
-                       const rest_response_handler_t& response_handler) {
-        if(this->connection == nullptr)
+    void rest::request(const rest_request_s &request,
+                       const rest_response_handler_t &response_handler) {
+        if (this->connection == nullptr)
             return;
 
         asio::post([this, request, response_handler]() {
@@ -78,7 +144,7 @@ namespace pterocxx {
                     raw_request += "HTTP/1.1";
                     raw_request += "\r\n";
                 }
-                // a
+                // headers
                 for (const auto &header: request.headers) {
                     raw_request += header.first;
                     raw_request += ": ";
@@ -97,29 +163,46 @@ namespace pterocxx {
 
             rest_response_s response;
             std::string raw_response;
-
-            auto defrag = [&response, &raw_response]() -> bool {
-
-                return false;
-            };
             // read response
             {
-                std::array<uint8_t, 2048> fragment_buffer{};
-                size_t read;
+                std::array<uint8_t, 1> byte_buffer{};
                 size_t total = 0;
                 do {
-                   read = this->connection->read_some(asio::buffer(fragment_buffer));
-                   total+=read;
+                    this->connection->read_some(asio::buffer(byte_buffer));
+                    total++;
 
-                   // append fragment to raw response
-                   raw_response.append(fragment_buffer.data(),
-                                       fragment_buffer.data()+read);
-                } while(!defrag() /* try to de-fragment the response */);
+                    // append fragment to raw response
+                    raw_response.append(byte_buffer.data(),
+                                        byte_buffer.data() + 1);
+                    if (raw_response.ends_with("\r\n\r\n"))
+                        break;
+                } while (true);
 
+                try {
+                    // parse http headers
+                    response = parse_raw_response(raw_response);
+                } catch (const std::exception& x) {
+                    printf("Rest request ERROR: %s\n", x.what());
+                    return;
+                }
 
-                printf("total: %lld\n", total);
+                // read body
+                uint32_t content_length = 0;
+                {
+                    auto content_length_raw = response.headers["Content-Length"];
+                    std::from_chars(content_length_raw.c_str(),
+                                    content_length_raw.c_str()+content_length_raw.length(),
+                                    content_length);
+                }
+
+                std::string body_buffer;
+                body_buffer.resize(content_length);
+                {
+                    asio::read(*this->connection, asio::buffer(body_buffer));
+                }
+                response.body = std::move(body_buffer);
+                response_handler(response);
             }
-
         });
     }
 }

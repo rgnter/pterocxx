@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdint>
 #include <string_view>
+#include <nlohmann/json.hpp>
 
 namespace pterocxx {
 
@@ -30,6 +31,8 @@ namespace pterocxx {
 
         std::string_view created_at;
         std::string_view updated_at;
+    public:
+        void build_from_attributes(const nlohmann::json& attributes);
     };
 
     /**

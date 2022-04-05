@@ -3,7 +3,7 @@
 //
 
 #include <pterocxx.hpp>
-
+#include <nlohmann/json.hpp>
 
 namespace pterocxx {
 
@@ -49,8 +49,17 @@ namespace pterocxx {
                 .endpoint = "/api/application/users",
                 .headers = headers
         };
-        this->rest->request(request, [](const rest_response_s &response) {
-            response.body; // parse json
+        this->rest->request(request, [handler](const rest_response_s &response) {
+            const auto& response_json = nlohmann::json::parse(response.body);
+
+            query_users_response_s api_response;
+            for (const auto &entry : response_json["data"]) {
+                user_s entry_user;
+                entry_user.build_from_attributes(entry["attributes"]);
+                api_response.users.push_back(entry_user);
+            }
+
+            handler(api_response);
         });
     }
 
