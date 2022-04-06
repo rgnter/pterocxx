@@ -16,32 +16,43 @@
 namespace pterocxx {
 
     /**
+     * Base response
+     */
+    struct base_response {
+    public:
+        std::vector<pterocxx::error_s> errors;
+    };
+
+    /**
      * Structure holding users response.
      */
-    struct get_users_response_s {
+    struct get_users_response_s
+            : base_response {
     public:
         std::vector<pterocxx::user_s> users;
     };
     /**
-     * Query users handler.
+     * Get users handler.
      */
     typedef std::function<void(get_users_response_s)> get_users_response_handler_t;
 
 
     /**
-     * Structure holding get user details response.
+     * Structure holding user details response.
      */
-    struct get_user_details_response_s {
+    struct get_user_details_response_s
+            : base_response {
     public:
         pterocxx::user_s user;
     };
     /**
-     * Query users handler.
+     * Get user details handler.
      */
     typedef std::function<void(get_user_details_response_s)> get_user_details_response_handler_t;
 
+
     /**
-     * Application connecting to Pterodactyl API.
+     * Pterodactyl application.
      */
     class application {
     private:
@@ -61,11 +72,11 @@ namespace pterocxx {
 
     public:
         /**
-         * Constructs application.
+         * Construct application and rest client.
          *
-         * @param host Remote host, ie. {@code panel.example.com}
-         * @param port    Remote port, usually HTTPS port {@code 443}
-         * @param app_key Application authorization key
+         * @param host     Remote host, for example panel.example.net
+         * @param app_key  Application authorization key
+         * @param port     Remote port, usually HTTPS port {@code 443}
          * @param app_name Application name, referenced in User-Agent header.
          */
         application(
@@ -76,40 +87,46 @@ namespace pterocxx {
         );
 
         /**
-         * Destructs application.
+         * Destruct application and rest client.
          */
         ~application();
 
         /**
-         * Initializes application.
+         * Initialize application.
+         * Connect to remote.
          */
         void init();
 
         /**
-         * Terminates application.
+         * Terminate application.
+         * Disconnect from remote.
          */
         void term();
 
         /**
-         * Synchronizes with application thread.
+         * Synchronize with application thread.
+         * Interrupted when application is terminated.
          */
         void sync();
 
         /**
-         * Gets users. {@code /api/application/users}
+         * Get users.
+         * API endpoint: <code>/api/application/users</code>
          * @param handler Handler.
          */
         void get_users(const get_users_response_handler_t& handler);
 
         /**
-         * Gets user details. {@code /api/application/users/{user_id}}
+         * Get user details.
+         * API endpoint: <code>/api/application/users/{user_id}</code>
          * @param user_id User ID.
          * @param handler Handler.
-         * @param query   Optional query.
+         * @param include_servers Include servers in user details.
          */
         void get_user_details(pterocxx::user_id_t user_id,
                               const get_user_details_response_handler_t& handler,
-                              const pterocxx::query_s& query = pterocxx::query_s());
+                              bool include_servers = false);
+
     };
 
 }

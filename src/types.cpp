@@ -7,6 +7,14 @@
 
 namespace pterocxx {
 
+    /**
+     *
+     * @tparam T
+     * @param key
+     * @param default_value
+     * @param attributes
+     * @return
+     */
     template<typename T>
     nlohmann::json::value_type
     read_attribute(const T &key, nlohmann::json::value_type default_value, const nlohmann::json &attributes) {
@@ -38,7 +46,7 @@ namespace pterocxx {
         this->language = std::string(
                 read_attribute("language", "null", attributes)
         );
-        this->root_admin = attributes["root_admin"];
+        this->root_admin      = attributes["root_admin"];
         this->two_factor_auth = attributes["2fa"];
         this->created_at = std::string(
                 read_attribute("created_at", "null", attributes)

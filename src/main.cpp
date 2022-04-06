@@ -17,18 +17,12 @@ int main() {
     pterocxx::application app("panel.battleland.eu", provide_app_key());
     app.init();
 
-    // get users
-    app.get_users([&app](const pterocxx::get_users_response_s &response) {
-        printf("Users1 -- \n");
-        for (const auto &user: response.users) {
-            printf("User: %s\n", user.username.data());
-        }
-    });
 
-    // ger user
-    app.get_user_details(1, [](const pterocxx::get_user_details_response_s &response) {
 
-    }, pterocxx::make_query({"servers", true}));
+    // get user
+    app.get_user_details(3, [](const pterocxx::get_user_details_response_s &response) {
+        printf("%d\n", response.user.id);
+    }, true);
 
     app.sync();
 }

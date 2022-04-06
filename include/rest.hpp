@@ -20,61 +20,42 @@ namespace ssl = boost::asio::ssl;
 
 namespace pterocxx {
 
-
-
-    /**
-     * Query entry.
-     */
-    typedef std::pair<std::string, nlohmann::json::value_type> query_entry_t;
-
     /**
      * Structure holding buildable query parameters.
      */
     struct query_s {
     private:
-        std::unordered_map<std::string, nlohmann::json::value_type> query;
+        std::unordered_map<std::string, std::string> query;
 
     public:
-        [[nodiscard]] inline bool present() const {
-            return !query.empty();
-        }
-        [[nodiscard]] inline std::string build() const {
-            std::string built;
-            for (const auto &item : query) {
-                built+=item.first;
-                built+="=";
-                built+=item.second.dump();
-            }
-            return built;
-        }
-        inline nlohmann::json::value_type& operator[](const std::string& key) {
-            return query[key];
-        }
+        /**
+         * @return True if query has any parameters. Otherwise, returns false.
+         */
+        [[nodiscard]] bool present() const;
+        /**
+         * Builds query string.
+         * @retur Query string, ie. Key0=Val0&Key1=Val1
+         */
+        [[nodiscard]] std::string build() const;
 
+        /**
+         * Subscript operator.
+         * @param key Key.
+         * @return Value.
+         */
+        std::string& operator[](const std::string& key);
     };
-
-    static query_s make_query(query_entry_t entries...) {
-        va_list args;
-        va_start(args, entries);
-        while(true) {
-            query_entry_t& entry = va_arg(args, query_entry_t);
-            printf("%s\n", entry.first.c_str());
-        }
-        va_end(args);
-    }
 
     /**
      * Structure holding rest request
      */
     struct rest_request_s {
     public:
+        std::string body;
         std::string method;
         std::string endpoint;
-
+    public:
         std::unordered_map<std::string, std::string> headers;
-        std::string body;
-
-        pterocxx::query_s query;
     };
 
     /**
@@ -83,21 +64,30 @@ namespace pterocxx {
     struct rest_response_s {
     public:
         std::string version;
-        uint32_t status_code = 0;
-        std::string status_detail;
-
         std::string body;
+        std::string detail;
+
+        uint32_t status_code = 0;
+    public:
+
         std::unordered_map<std::string, std::string> headers;
     };
 
+
+    rest_request_s make_get_request(const std::string& endpoint,
+                                    const pterocxx::query_s& query,
+                                    const std::unordered_map<std::string, std::string>& headers);
+
+    rest_request_s make_post_request(const std::string& endpoint,
+                                     const std::string& body,
+                                     const std::unordered_map<std::string, std::string>& headers);
     /**
      * Rest response handler
      */
     typedef std::function<void(rest_response_s)> rest_response_handler_t;
 
-
     /**
-     * Class providing rest functions
+     * Class providing http client rest functionality.
      */
     class rest {
     private:
@@ -116,33 +106,30 @@ namespace pterocxx {
         ssl::stream<asio::ip::tcp::socket> *connection
                 = nullptr;
 
-
     public:
         /**
-         * Constructs REST connection.
+         * Constructs http client.
          *
-         * @param host Host to lookup
-         * @param port Port
+         * @param host Host to lookup.
+         * @param port Port.
          */
         explicit rest(const std::string &host, uint16_t port);
-        virtual ~rest();
+        ~rest();
 
     public:
         /**
-         * Initializes REST connection to server.
-         * @return After connection is ready to accept requests.
+         * Connects client to the remote.
          */
         void init();
         /**
-         * Terminates REST connection to server.
-         * @return Immediately
+         * Disconnects client from the remote.
          */
         void term();
 
         /**
-         * Sends REST request
-         * @param request  Request
-         * @param response_handler Response Handler
+         * Sends REST request to the remote.
+         * @param request  Request.
+         * @param response_handler Response Handler.
          */
         void request(const rest_request_s &request,
                      const rest_response_handler_t &response_handler);

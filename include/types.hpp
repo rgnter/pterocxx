@@ -13,7 +13,18 @@
 namespace pterocxx {
 
 
+    /**
+     * Structure holding error information.
+     */
+    struct error_s {
+    public:
+        std::string code;
+        std::string detail;
+        std::string status;
+    };
+
     typedef uint32_t user_id_t;
+    typedef std::string user_external_id_t;
 
     /**
      * Structure holding user information.
@@ -21,7 +32,7 @@ namespace pterocxx {
     struct user_s {
     public:
         user_id_t id;
-        std::string external_id;
+        user_external_id_t external_id;
         std::string uuid;
 
         std::string username;
@@ -29,6 +40,7 @@ namespace pterocxx {
         std::string first_name;
         std::string last_name;
         std::string language;
+
         bool root_admin;
         bool two_factor_auth;
 
