@@ -12,25 +12,28 @@
 
 namespace pterocxx {
 
+
+    typedef uint32_t user_id_t;
+
     /**
      * Structure holding user information.
      */
     struct user_s {
     public:
-        uint32_t id;
-        std::string_view external_id;
-        std::string_view uuid;
+        user_id_t id;
+        std::string external_id;
+        std::string uuid;
 
-        std::string_view username;
-        std::string_view email;
-        std::string_view first_name;
-        std::string_view last_name;
-        std::string_view language;
+        std::string username;
+        std::string email;
+        std::string first_name;
+        std::string last_name;
+        std::string language;
         bool root_admin;
         bool two_factor_auth;
 
-        std::string_view created_at;
-        std::string_view updated_at;
+        std::string created_at;
+        std::string updated_at;
     public:
         void build_from_attributes(const nlohmann::json& attributes);
     };

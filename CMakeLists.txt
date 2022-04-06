@@ -13,7 +13,7 @@ endif()
 include("${CMAKE_BINARY_DIR}/cmake/conan.cmake")
 
 
-conan_cmake_configure(REQUIRES spdlog/1.9.2 nlohmann_json/3.9.1 openssl/3.0.2 ctre/3.6
+conan_cmake_configure(REQUIRES fmt/8.1.1 nlohmann_json/3.9.1 openssl/3.0.2
         GENERATORS cmake_find_package)
 
 conan_cmake_autodetect(settings)
@@ -27,17 +27,15 @@ set(PTEROCXX_SOURCES src/main.cpp src/application.cpp src/rest.cpp include/types
 
 
 # Find libaries
-find_package(spdlog)
 find_package(nlohmann_json)
-find_package(cxxopts)
 find_package(OpenSSL)
-find_package(ctre)
+find_package(fmt)
 find_package(Boost)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIR})
 include_directories(include/)
 
-link_libraries(${OPENSSL_LIBRARIES} nlohmann_json::nlohmann_json ctre::ctre)
+link_libraries(${OPENSSL_LIBRARIES} nlohmann_json::nlohmann_json fmt::fmt)
 
 add_executable(pterocxx ${PTEROCXX_HEADERS} ${PTEROCXX_SOURCES})

@@ -96,7 +96,8 @@ namespace pterocxx {
             // could be better ipv6 and ipv4 resolution
             for (const auto &endpoint: results) {
                 this->remote = endpoint;
-                this->remote.port(port);
+                if(port)
+                    this->remote.port(port);
                 break;
             }
         }
@@ -108,6 +109,8 @@ namespace pterocxx {
     }
 
     rest::~rest() {
+        // wait for requests to finish
+        auto lock = std::lock_guard<std::mutex>(this->io_lock);
         delete connection;
     }
 
@@ -125,6 +128,12 @@ namespace pterocxx {
         this->io_ctx.run();
     }
 
+    void rest::term() {
+        if (connection == nullptr)
+            return;
+        this->connection->shutdown();
+    }
+
     void rest::request(const rest_request_s &request,
                        const rest_response_handler_t &response_handler) {
         if (this->connection == nullptr)
@@ -140,6 +149,10 @@ namespace pterocxx {
                     raw_request += request.method;
                     raw_request += " ";
                     raw_request += request.endpoint;
+                    if(request.query.present()) {
+                        raw_request+="?";
+                        raw_request+=request.query.build();
+                    }
                     raw_request += " ";
                     raw_request += "HTTP/1.1";
                     raw_request += "\r\n";
@@ -200,6 +213,7 @@ namespace pterocxx {
                 {
                     asio::read(*this->connection, asio::buffer(body_buffer));
                 }
+
                 response.body = std::move(body_buffer);
                 response_handler(response);
             }
