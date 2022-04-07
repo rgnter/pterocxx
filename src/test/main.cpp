@@ -19,20 +19,21 @@ std::string provide_app_key() {
 }
 
 int main() {
-    pterocxx::application app("panel.battleland.eu", provide_app_key());
+    // constructs application on panel.example.net
+    // uses default https port so the rest client is using secured connection
+    pterocxx::application app("panel.example.net",
+                              "app_key"
+            // port = 443,          Server port
+            // app_name="pterocxx"  Used in user agent when sending requests
+    );
+
     app.init();
-
-    pterocxx::user_s user;
-    user.set_email("example@example.net")
-        .set_username("username")
-        .set_last_name("last_name")
-        .set_first_name("first_name");
-    app.create_user(user, [&app](const auto response) {
-        app.delete_user(response.user.id, [](const pterocxx::delete_user_response_s& response) {
-
-        });
+    app.cr([](const pterocxx::delete_user_response_s& response) {
+        if(!response.successful)
+            for (const auto &error : response.errors) {
+                printf("Error: %s, %s, %s\n", error.detail.c_str(), error.code.c_str(), error.status.c_str());
+            }
     });
-
 
     app.sync();
 }

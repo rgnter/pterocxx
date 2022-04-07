@@ -113,6 +113,8 @@ namespace pterocxx {
             try {
                 const auto response_json = nlohmann::json::parse(response.body);
                 pterocxx::get_users_response_s api_response;
+                api_response.successful = response.status_code == 200;
+
                 api_response.parse(response_json);
                 handler(api_response);
             } catch (const std::exception &x) {
@@ -141,6 +143,8 @@ namespace pterocxx {
 
                 {
                     pterocxx::get_user_details_response_s api_response;
+                    api_response.successful = response.status_code == 200;
+
                     handler(api_response);
                 }
             } catch (const std::exception &x) {
@@ -163,6 +167,8 @@ namespace pterocxx {
 
                 {
                     pterocxx::create_user_response_s api_response;
+                    api_response.successful = response.status_code == 201;
+
                     api_response.parse(response_json);
                     handler(api_response);
                 }
@@ -187,6 +193,8 @@ namespace pterocxx {
 
                 {
                     pterocxx::update_user_response_s api_response;
+                    api_response.successful = response.status_code == 200;
+
                     api_response.parse(response_json);
                     handler(api_response);
                 }
@@ -208,7 +216,9 @@ namespace pterocxx {
             try {
                 {
                     pterocxx::delete_user_response_s api_response;
-                    api_response.success = response.status_code == 204;
+                    api_response.successful = response.status_code == 204;
+
+                    api_response.parse(nlohmann::json());
                     handler(api_response);
                 }
             } catch (const std::exception &x) {

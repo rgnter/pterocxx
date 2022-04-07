@@ -20,6 +20,7 @@ namespace pterocxx {
      */
     struct base_response_s {
     public:
+        bool successful;
         std::vector<pterocxx::error_s> errors;
 
     public:
@@ -98,8 +99,6 @@ namespace pterocxx {
      */
     struct delete_user_response_s
             : base_response_s {
-    public:
-        bool success;
     public:
         void parse(const nlohmann::json &json);
     };
