@@ -1,5 +1,6 @@
 # pterocxx
-Pterodactyl API in C++.
+Lightweight pterodactyl API library written in c++.
+
 ## Developers
 ### General
 Construct application:
@@ -29,8 +30,8 @@ app.any_request([](const pterocxx::any_response& response) {
       }
 });
 ```
-## User API
-### Get users
+### User API
+#### Get users
 Retrieve all users.
 ```cxx
 app.get_users([](const pterocxx::get_users_response_s& response) {
@@ -43,7 +44,7 @@ app.get_users([](const pterocxx::get_users_response_s& response) {
 });
 ```
 
-### Get user details
+#### Get user details
 Retrieve user details.
 ```cxx
 // user id
@@ -55,7 +56,7 @@ app.get_user_details(user_id, [](const pterocxx::get_user_details_response_s& re
 });
 ```
 
-### Create user
+#### Create user
 Create user.
 ```cxx
 // immutable user model
@@ -72,7 +73,7 @@ app.create_user(user, [](const pterocxx::create_user_response_s& response) {
     printf("Username: %s - Id: %d\n", user.username.c_str(), user.id);
 });
 ```
-### Update user
+#### Update user
 Update user.
 ```cxx 
 pterocxx::user_s user;
@@ -86,7 +87,7 @@ app.update_user(user.id, user, [](const pterocxx::update_user_response_s& respon
     printf("Username: %s - Id: %d\n", user.username.c_str(), user.id);
 });
 ```
-### Delete user
+#### Delete user
 Delete user.
 ```cxx 
 pterocxx::user_s user;
@@ -97,3 +98,9 @@ app.delete_user(user.id, [](const pterocxx::delete_user_response_s& response) {
     }
 });
 ```
+### Building
+#### Prerequisites
+- OpenSSL
+- Boost
+- CMake
+- Conan
