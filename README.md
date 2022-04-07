@@ -17,7 +17,7 @@ app.init();
 // synchronize with application thread
 app.sync();
 ```
-Error checking:
+Handle errors:
 ```cxx
 // if error is thrown by remote, it can be queried.
 app.any_request([](const pterocxx::any_response& response) {
