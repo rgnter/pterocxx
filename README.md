@@ -93,7 +93,7 @@ Delete user.
 pterocxx::user_s user;
 user.id = 1;
 app.delete_user(user.id, [](const pterocxx::delete_user_response_s& response) {
-    if(response.success) {
+    if(response.successful) {
         printf("Successfully deleted user\n");
     }
 });
