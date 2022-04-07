@@ -13,9 +13,13 @@ constexpr const char *CLRF = "\r\n";
 
 namespace pterocxx {
 
-    rest_exception::rest_exception(const char *const message)
-    : exception(message)
+    rest_exception::rest_exception(const std::string &message)
+    : message(message)
     {}
+
+    const char *rest_exception::what() const noexcept {
+        return this->message.c_str();
+    }
 
     rest_request_s make_get_request(const std::string &endpoint,
                                     const pterocxx::query_s &query,
@@ -167,7 +171,7 @@ namespace pterocxx {
 
             } while (line_iterator != line_iterator_end);
         } catch (const std::exception &ignored) {
-            throw std::exception("REST: Invalid HTTP request.");
+            throw pterocxx::rest_exception("Invalid HTTP request.");
         }
         return response;
     }
@@ -201,7 +205,7 @@ namespace pterocxx {
             asio::ip::tcp::resolver resolver(io_ctx);
             auto results = resolver.resolve(resolver_query, error);
             if (error)
-                throw rest_exception(fmt::format("Couldn't resolve address - {}: {}", error.value(), error.message().c_str()).c_str());
+                throw rest_exception(fmt::format("Couldn't resolve address - {}: {}", error.value(), error.message().c_str()));
 
             // could be better ipv6 and ipv4 resolution
             for (const auto &endpoint: results) {
@@ -236,7 +240,7 @@ namespace pterocxx {
         boost::system::error_code error;
         this->connection->lowest_layer().connect(this->remote, error);
         if (error)
-            throw rest_exception(fmt::format("Couldn't connect - {}: {}", error.value(), error.message().c_str()).c_str());
+            throw rest_exception(fmt::format("Couldn't connect - {}: {}", error.value(), error.message().c_str()));
         this->connection->handshake(ssl::stream_base::handshake_type::client);
         this->io_ctx.run();
     }
@@ -309,5 +313,4 @@ namespace pterocxx {
             }
         });
     }
-
 }

@@ -6,16 +6,15 @@
 #define PTEROCXX_REST_HPP
 
 #include <cstdarg>
+#include <exception>
+
 #include <boost/asio.hpp>
 #include <nlohmann/json.hpp>
 #include <boost/asio/ssl.hpp>
 
-
-
 namespace asio = boost::asio;
 namespace ip = boost::asio::ip;
 namespace ssl = boost::asio::ssl;
-
 
 namespace pterocxx {
 
@@ -24,7 +23,11 @@ namespace pterocxx {
      */
     class rest_exception : public std::exception {
     public:
-        rest_exception(const char *const message);
+        const std::string message;
+    public:
+        explicit rest_exception(const std::string &message);
+    public:
+        const char *what() const noexcept override;
     };
 
     /**
