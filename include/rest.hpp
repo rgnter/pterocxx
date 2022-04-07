@@ -105,6 +105,35 @@ namespace pterocxx {
                                      const pterocxx::query_s& query,
                                      const std::string& body,
                                      const std::unordered_map<std::string, std::string>& headers);
+
+    /**
+     * Build UPDATE REST request.
+     *
+     * @param endpoint Request endpoint.
+     * @param query    Request query.
+     * @param body     Request body.
+     * @param headers  Request headers.
+     * @return POST REST request.
+     */
+    rest_request_s make_patch_request(const std::string& endpoint,
+                                      const pterocxx::query_s& query,
+                                      const std::string& body,
+                                      const std::unordered_map<std::string, std::string>& headers);
+
+    /**
+     * Build DELETE REST request.
+     *
+     * @param endpoint Request endpoint.
+     * @param query    Request query.
+     * @param body     Request body.
+     * @param headers  Request headers.
+     * @return POST REST request.
+     */
+    rest_request_s make_delete_request(const std::string& endpoint,
+                                      const pterocxx::query_s& query,
+                                      const std::string& body,
+                                      const std::unordered_map<std::string, std::string>& headers);
+
     /**
      * Rest response handler
      */
@@ -152,7 +181,6 @@ namespace pterocxx {
          * @return Boolean true if client is busy processing requests.
          */
         bool is_busy();
-
         /**
          * Connects client to the remote.
          * @throws pterocxx::rest_exception when can't connect to remote.

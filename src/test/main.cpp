@@ -19,14 +19,20 @@ std::string provide_app_key() {
 }
 
 int main() {
-    pterocxx::application app("paasdnel.battleland.eu", provide_app_key());
+    pterocxx::application app("panel.battleland.eu", provide_app_key());
     app.init();
 
-    app.get_users([](const pterocxx::get_users_response_s& response) {
-        for (const auto &user : response.users.data) {
-            printf("%s\n", user.first_name.c_str());
-        }
+    pterocxx::user_s user;
+    user.set_email("example@example.net")
+        .set_username("username")
+        .set_last_name("last_name")
+        .set_first_name("first_name");
+    app.create_user(user, [&app](const auto response) {
+        app.delete_user(response.user.id, [](const pterocxx::delete_user_response_s& response) {
+
+        });
     });
+
 
     app.sync();
 }

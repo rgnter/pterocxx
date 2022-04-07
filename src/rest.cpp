@@ -38,9 +38,34 @@ namespace pterocxx {
                                      const std::unordered_map<std::string, std::string> &headers) {
         rest_request_s request = make_get_request(endpoint, query, headers);
         {
+            request.method = "POST";
             request.body = body;
+            request.headers["Content-Type"]
+                    = "application/json";
             request.headers["Content-Length"]
                     = std::to_string(body.length());
+        }
+        return request;
+    }
+
+    rest_request_s make_patch_request(const std::string &endpoint,
+                                      const query_s &query,
+                                      const std::string &body,
+                                      const std::unordered_map<std::string, std::string> &headers) {
+        rest_request_s request = make_post_request(endpoint, query, body, headers);
+        {
+            request.method = "PATCH";
+        }
+        return request;
+    }
+
+    rest_request_s make_delete_request(const std::string &endpoint,
+                                       const query_s &query,
+                                       const std::string &body,
+                                       const std::unordered_map<std::string, std::string> &headers) {
+        rest_request_s request = make_post_request(endpoint, query, body, headers);
+        {
+            request.method = "DELETE";
         }
         return request;
     }

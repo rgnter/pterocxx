@@ -23,7 +23,8 @@ namespace pterocxx {
         std::vector<pterocxx::error_s> errors;
 
     public:
-        virtual void parse(const nlohmann::json& json);
+        virtual void parse(const nlohmann::json &json);
+
     public:
         bool has_errors();
     };
@@ -36,7 +37,7 @@ namespace pterocxx {
     public:
         pterocxx::list_object_s<pterocxx::user_s> users;
     public:
-        void parse(const nlohmann::json& json);
+        void parse(const nlohmann::json &json);
     };
     /**
      * Get users handler.
@@ -52,13 +53,60 @@ namespace pterocxx {
     public:
         pterocxx::user_s user;
     public:
-        void parse(const nlohmann::json& json);
+        void parse(const nlohmann::json &json);
     };
     /**
      * Get user details handler.
      */
     typedef std::function<void(get_user_details_response_s)> get_user_details_response_handler_t;
 
+
+    /**
+     * Structure holding create user response.
+     */
+    struct create_user_response_s
+            : base_response_s {
+    public:
+        pterocxx::user_s user;
+    public:
+        void parse(const nlohmann::json &json);
+    };
+    /**
+     * Create user handler.
+     */
+    typedef std::function<void(create_user_response_s)> create_user_response_handler_t;
+
+
+    /**
+     * Structure holding user update response.
+     */
+    struct update_user_response_s
+            : base_response_s {
+    public:
+        pterocxx::user_s user;
+    public:
+        void parse(const nlohmann::json &json);
+    };
+    /**
+     * Update user details handler.
+     */
+    typedef std::function<void(update_user_response_s)> update_user_response_handler_t;
+
+
+    /**
+     * Structure holding user update response.
+     */
+    struct delete_user_response_s
+            : base_response_s {
+    public:
+        bool success;
+    public:
+        void parse(const nlohmann::json &json);
+    };
+    /**
+     * Update user details handler.
+     */
+    typedef std::function<void(delete_user_response_s)> delete_user_response_handler_t;
 
     /**
      * Pterodactyl application.
@@ -68,13 +116,13 @@ namespace pterocxx {
         std::condition_variable should_run;
 
     private:
-        const uint16_t    remote_port;
+        const uint16_t remote_port;
         const std::string remote_host;
         const std::string app_key;
         const std::string app_name;
 
     private:
-        pterocxx::rest_client* rest;
+        pterocxx::rest_client *rest;
 
     public:
         /**
@@ -125,8 +173,10 @@ namespace pterocxx {
          * Get users.
          * API endpoint: <code>/api/application/users</code>
          * @param handler Handler.
+         * @param include_servers Include servers in user details.
          */
-        void get_users(const get_users_response_handler_t& handler);
+        void get_users(const get_users_response_handler_t &handler,
+                       bool include_servers = false);
 
         /**
          * Get user details.
@@ -136,8 +186,37 @@ namespace pterocxx {
          * @param include_servers Include servers in user details.
          */
         void get_user_details(pterocxx::user_id_t user_id,
-                              const get_user_details_response_handler_t& handler,
+                              const get_user_details_response_handler_t &handler,
                               bool include_servers = false);
+
+        /**
+         * Create user.
+         * API endpoint: <code>/api/application/users</code>
+         * @param user    User.
+         * @param handler Handler.
+         */
+        void create_user(const pterocxx::user_s &user,
+                         const create_user_response_handler_t &handler);
+
+        /**
+         * Update user.
+         * API endpoint: <code>/api/application/users/{user_id}</code>
+         * @param user_id User ID.
+         * @param user    User.
+         * @param handler Handler.
+         */
+        void update_user(pterocxx::user_id_t user_id,
+                         const pterocxx::user_s &user,
+                         const update_user_response_handler_t &handler);
+
+        /**
+         * Delete user.
+         * API endpoint: <code>/api/application/users/{user_id}</code>
+         * @param user_id User ID.
+         * @param handler Handler.
+         */
+        void delete_user(pterocxx::user_id_t user_id,
+                         const delete_user_response_handler_t &handler);
 
     };
 

@@ -14,7 +14,7 @@ namespace pterocxx {
         if (json.contains("errors")) {
             for (const auto &error_json: json["errors"]) {
                 pterocxx::error_s error;
-                error.build_from_attributes(error_json);
+                error.read_object(error_json);
                 errors.emplace_back(error);
             }
         }
@@ -23,7 +23,7 @@ namespace pterocxx {
     void get_users_response_s::parse(const nlohmann::json &json) {
         base_response_s::parse(json);
         pterocxx::list_object_s<pterocxx::user_s> user_list;
-        user_list.build_from_attributes(json);
+        user_list.read_object(json);
         this->users = std::move(user_list);
     }
 
@@ -31,9 +31,31 @@ namespace pterocxx {
         base_response_s::parse(json);
         if (json.contains("attributes")) {
             user_s user;
-            user.build_from_attributes(json["attributes"]);
+            user.read_object(json["attributes"]);
             this->user = user;
         }
+    }
+
+    void create_user_response_s::parse(const nlohmann::json &json) {
+        base_response_s::parse(json);
+        if (json.contains("attributes")) {
+            user_s user;
+            user.read_object(json["attributes"]);
+            this->user = user;
+        }
+    }
+
+    void update_user_response_s::parse(const nlohmann::json &json) {
+        base_response_s::parse(json);
+        if (json.contains("attributes")) {
+            user_s user;
+            user.read_object(json["attributes"]);
+            this->user = user;
+        }
+    }
+
+    void delete_user_response_s::parse(const nlohmann::json &json) {
+        base_response_s::parse(json);
     }
 
     bool base_response_s::has_errors() {
@@ -80,7 +102,8 @@ namespace pterocxx {
     }
 
 
-    void application::get_users(const get_users_response_handler_t &handler) {
+    void application::get_users(const get_users_response_handler_t &handler,
+                                bool include_servers) {
         auto request = pterocxx::rest_request_s{
                 .method = "GET",
                 .endpoint = "/api/application/users",
@@ -118,6 +141,74 @@ namespace pterocxx {
 
                 {
                     pterocxx::get_user_details_response_s api_response;
+                    handler(api_response);
+                }
+            } catch (const std::exception &x) {
+                printf("API endpoint %s ERROR: %s\n\tResponse Body: %s\n", request.endpoint.c_str(), x.what(),
+                       response.body.c_str());
+            }
+        });
+    }
+
+    void application::create_user(const user_s &user,
+                                  const create_user_response_handler_t &handler) {
+        auto request = make_post_request("/api/application/users",
+                                         pterocxx::query_s(),
+                                         user.write_object().dump(),
+                                         basic_request_headers
+        );
+        this->rest->request(request, [request, handler](const rest_response_s &response) {
+            try {
+                const auto &response_json = nlohmann::json::parse(response.body);
+
+                {
+                    pterocxx::create_user_response_s api_response;
+                    api_response.parse(response_json);
+                    handler(api_response);
+                }
+            } catch (const std::exception &x) {
+                printf("API endpoint %s ERROR: %s\n\tResponse Body: %s\n", request.endpoint.c_str(), x.what(),
+                       response.body.c_str());
+            }
+        });
+    }
+
+    void application::update_user(pterocxx::user_id_t user_id,
+                                  const user_s &user,
+                                  const update_user_response_handler_t &handler) {
+        auto request = make_patch_request(fmt::format("/api/application/users/{}", user_id),
+                                         pterocxx::query_s(),
+                                         user.write_object().dump(),
+                                         basic_request_headers
+        );
+        this->rest->request(request, [request, handler](const rest_response_s &response) {
+            try {
+                const auto &response_json = nlohmann::json::parse(response.body);
+
+                {
+                    pterocxx::update_user_response_s api_response;
+                    api_response.parse(response_json);
+                    handler(api_response);
+                }
+            } catch (const std::exception &x) {
+                printf("API endpoint %s ERROR: %s\n\tResponse Body: %s\n", request.endpoint.c_str(), x.what(),
+                       response.body.c_str());
+            }
+        });
+    }
+
+    void application::delete_user(pterocxx::user_id_t user_id,
+                                  const delete_user_response_handler_t &handler) {
+        auto request = make_delete_request(fmt::format("/api/application/users/{}", user_id),
+                                          pterocxx::query_s(),
+                                          "",
+                                          basic_request_headers
+        );
+        this->rest->request(request, [request, handler](const rest_response_s &response) {
+            try {
+                {
+                    pterocxx::delete_user_response_s api_response;
+                    api_response.success = response.status_code == 204;
                     handler(api_response);
                 }
             } catch (const std::exception &x) {
