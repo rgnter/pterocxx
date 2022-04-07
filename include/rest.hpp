@@ -20,6 +20,14 @@ namespace ssl = boost::asio::ssl;
 namespace pterocxx {
 
     /**
+     * REST exception.
+     */
+    class rest_exception : public std::exception {
+    public:
+        rest_exception(const char *const message);
+    };
+
+    /**
      * Structure holding buildable query parameters.
      */
     struct query_s {
@@ -46,7 +54,7 @@ namespace pterocxx {
     };
 
     /**
-     * Structure holding rest request
+     * Structure holding rest_client request
      */
     struct rest_request_s {
     public:
@@ -58,7 +66,7 @@ namespace pterocxx {
     };
 
     /**
-     * Structure holding rest response
+     * Structure holding rest_client response
      */
     struct rest_response_s {
     public:
@@ -72,12 +80,29 @@ namespace pterocxx {
         std::unordered_map<std::string, std::string> headers;
     };
 
-
+    /**
+     * Build GET REST request.
+     *
+     * @param endpoint Request endpoint.
+     * @param query    Request query.
+     * @param headers  Request headers.
+     * @return GET REST request.
+     */
     rest_request_s make_get_request(const std::string& endpoint,
                                     const pterocxx::query_s& query,
                                     const std::unordered_map<std::string, std::string>& headers);
 
+    /**
+     * Build POST REST request.
+     *
+     * @param endpoint Request endpoint.
+     * @param query    Request query.
+     * @param body     Request body.
+     * @param headers  Request headers.
+     * @return POST REST request.
+     */
     rest_request_s make_post_request(const std::string& endpoint,
+                                     const pterocxx::query_s& query,
                                      const std::string& body,
                                      const std::unordered_map<std::string, std::string>& headers);
     /**
@@ -86,11 +111,17 @@ namespace pterocxx {
     typedef std::function<void(rest_response_s)> rest_response_handler_t;
 
     /**
-     * Class providing http client rest functionality.
+     * Class providing http client rest_client functionality.
      */
-    class rest {
-    private:
+    class rest_client {
+    public:
+        /**
+         * Remote host.
+         */
         std::string host;
+        /**
+         * Remote port.
+         */
         uint16_t port;
 
     private:
@@ -111,13 +142,20 @@ namespace pterocxx {
          *
          * @param host Host to lookup.
          * @param port Port.
+         * @throws pterocxx::rest_exception when hostname is invalid.
          */
-        explicit rest(const std::string &host, uint16_t port);
-        ~rest();
+        explicit rest_client(const std::string &host, uint16_t port);
+        ~rest_client();
 
     public:
         /**
+         * @return Boolean true if client is busy processing requests.
+         */
+        bool is_busy();
+
+        /**
          * Connects client to the remote.
+         * @throws pterocxx::rest_exception when can't connect to remote.
          */
         void init();
         /**

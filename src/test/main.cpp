@@ -1,3 +1,8 @@
+
+#ifdef WIN32
+#define _WIN32_WINNT 0x0601
+#endif
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -14,7 +19,7 @@ std::string provide_app_key() {
 }
 
 int main() {
-    pterocxx::application app("panel.battleland.eu", provide_app_key());
+    pterocxx::application app("paasdnel.battleland.eu", provide_app_key());
     app.init();
 
     app.get_users([](const pterocxx::get_users_response_s& response) {

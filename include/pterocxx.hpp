@@ -5,11 +5,6 @@
 #ifndef PTEROCXX_PTEROCXX_HPP
 #define PTEROCXX_PTEROCXX_HPP
 
-#ifdef WIN32
-#define _WIN32_WINNT_WIN7
-#endif
-
-
 #include <string>
 #include <vector>
 #include <memory>
@@ -23,7 +18,7 @@ namespace pterocxx {
     /**
      * Base response
      */
-    struct base_response {
+    struct base_response_s {
     public:
         std::vector<pterocxx::error_s> errors;
 
@@ -37,7 +32,7 @@ namespace pterocxx {
      * Structure holding users response.
      */
     struct get_users_response_s
-            : base_response {
+            : base_response_s {
     public:
         pterocxx::list_object_s<pterocxx::user_s> users;
     public:
@@ -53,7 +48,7 @@ namespace pterocxx {
      * Structure holding user details response.
      */
     struct get_user_details_response_s
-            : base_response {
+            : base_response_s {
     public:
         pterocxx::user_s user;
     public:
@@ -79,9 +74,12 @@ namespace pterocxx {
         const std::string app_name;
 
     private:
-        pterocxx::rest* rest;
+        pterocxx::rest_client* rest;
 
-    private:
+    public:
+        /**
+         * Basic request headers used in every request.
+         */
         std::unordered_map<std::string, std::string> basic_request_headers;
 
     public:
@@ -101,7 +99,7 @@ namespace pterocxx {
         );
 
         /**
-         * Destruct application and rest client.
+         * Destruct application and rest_client client.
          */
         ~application();
 

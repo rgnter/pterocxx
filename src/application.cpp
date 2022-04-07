@@ -10,7 +10,7 @@
 namespace pterocxx {
 
 
-    void base_response::parse(const nlohmann::json &json) {
+    void base_response_s::parse(const nlohmann::json &json) {
         if (json.contains("errors")) {
             for (const auto &error_json: json["errors"]) {
                 pterocxx::error_s error;
@@ -21,14 +21,14 @@ namespace pterocxx {
     }
 
     void get_users_response_s::parse(const nlohmann::json &json) {
-        base_response::parse(json);
+        base_response_s::parse(json);
         pterocxx::list_object_s<pterocxx::user_s> user_list;
         user_list.build_from_attributes(json);
         this->users = std::move(user_list);
     }
 
     void get_user_details_response_s::parse(const nlohmann::json &json) {
-        base_response::parse(json);
+        base_response_s::parse(json);
         if (json.contains("attributes")) {
             user_s user;
             user.build_from_attributes(json["attributes"]);
@@ -36,7 +36,7 @@ namespace pterocxx {
         }
     }
 
-    bool base_response::has_errors() {
+    bool base_response_s::has_errors() {
         return !this->errors.empty();
     }
 
@@ -49,8 +49,8 @@ namespace pterocxx {
             app_key(std::move(app_key)),
             app_name(std::move(app_name)) {
 
-        // rest client
-        rest = new pterocxx::rest(this->remote_host, this->remote_port);
+        // rest_client client
+        rest = new pterocxx::rest_client(this->remote_host, this->remote_port);
 
         // basic headers
         basic_request_headers["Host"] = this->remote_host;

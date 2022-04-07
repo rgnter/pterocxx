@@ -13,16 +13,18 @@ constexpr const char *CLRF = "\r\n";
 
 namespace pterocxx {
 
+    rest_exception::rest_exception(const char *const message)
+    : exception(message)
+    {}
 
-    rest_request_s
-    make_get_request(const std::string &endpoint,
-                     const pterocxx::query_s &query,
-                     const std::unordered_map<std::string, std::string> &headers) {
+    rest_request_s make_get_request(const std::string &endpoint,
+                                    const pterocxx::query_s &query,
+                                    const std::unordered_map<std::string, std::string> &headers) {
         rest_request_s request;
         {
             request.method = "GET";
             request.headers = headers;
-            if(query.present())
+            if (query.present())
                 request.endpoint = fmt::format("{}?{}", endpoint, query.build());
             else
                 request.endpoint = endpoint;
@@ -30,15 +32,22 @@ namespace pterocxx {
         return request;
     }
 
-    rest_request_s make_post_request(const std::string &endpoint, const std::string &body,
+    rest_request_s make_post_request(const std::string &endpoint,
+                                     const pterocxx::query_s &query,
+                                     const std::string &body,
                                      const std::unordered_map<std::string, std::string> &headers) {
-        return rest_request_s();
+        rest_request_s request = make_get_request(endpoint, query, headers);
+        {
+            request.body = body;
+            request.headers["Content-Length"]
+                    = std::to_string(body.length());
+        }
+        return request;
     }
 
     /**
-     * 
-     * @param request 
-     * @return 
+     * @param request HTTP request.
+     * @return Raw HTTP request.
      */
     std::string gen_raw_request(const pterocxx::rest_request_s &request) {
         std::string raw_request;
@@ -68,30 +77,30 @@ namespace pterocxx {
         return raw_request;
     }
 
-    /**
-     * 
-     * @param raw_response 
-     * @return 
+    /*
+     * @param request Raw HTTP request.
+     * @return Parsed HTTP request.
      */
     rest_response_s parse_raw_response(const std::string &raw_response) {
         rest_response_s response{};
 
-        // regex matches
-        std::regex line_regex(CLRF);
-        std::regex status_regex(" ");
-        std::regex header_regex(":");
+        try {
+            // regex matches
+            std::regex line_regex(CLRF);
+            std::regex status_regex(" ");
+            std::regex header_regex(":");
 
-        // line iterator
-        std::sregex_token_iterator line_iterator(raw_response.begin(),
-                                                 raw_response.end(),
-                                                 line_regex, -1);
-        std::sregex_token_iterator line_iterator_end;
-        uint32_t line_index = 0;
-        do {
-            line_index++;
-            std::string line = *line_iterator++;
-            if (line_index == 1) {
-                try {
+            // line iterator
+            std::sregex_token_iterator line_iterator(raw_response.begin(),
+                                                     raw_response.end(),
+                                                     line_regex, -1);
+            std::sregex_token_iterator line_iterator_end;
+            uint32_t line_index = 0;
+            do {
+                line_index++;
+                std::string line = *line_iterator++;
+                if (line_index == 1) {
+
                     // read status header
                     std::sregex_token_iterator entry_iterator(line.begin(),
                                                               line.end(),
@@ -108,11 +117,8 @@ namespace pterocxx {
                     response.status_code = status_code;
                     response.detail = std::move(status_detail);
 
-                } catch (const std::exception &ignored) {
-                    throw std::exception("Invalid HTTP status header");
-                }
-            } else {
-                try {
+
+                } else {
                     std::sregex_token_iterator header_iterator(line.begin(),
                                                                line.end(),
                                                                header_regex, -1);
@@ -132,12 +138,12 @@ namespace pterocxx {
                         val = val.substr(0, val.length() - 2);
 
                     response.headers[key] = val;
-                } catch (const std::exception &ignored) {
-                    throw std::exception("Invalid HTTP header");
                 }
-            }
 
-        } while (line_iterator != line_iterator_end);
+            } while (line_iterator != line_iterator_end);
+        } catch (const std::exception &ignored) {
+            throw std::exception("REST: Invalid HTTP request.");
+        }
         return response;
     }
 
@@ -160,22 +166,22 @@ namespace pterocxx {
         return query[key];
     }
 
-    rest::rest(const std::string &host,
-               const uint16_t port) : host(host), port(port) {
+    rest_client::rest_client(const std::string &host,
+                             const uint16_t port) : host(host), port(port) {
         {
             boost::system::error_code error;
 
+            // resolve hostname, assume HTTPS connection
             asio::ip::tcp::resolver::query resolver_query(host, "https");
             asio::ip::tcp::resolver resolver(io_ctx);
             auto results = resolver.resolve(resolver_query, error);
-            if (error) {
-                printf("Rest ctor ERROR: Couldn't resolve address / %d - %s\n", error.value(), error.message().c_str());
-                return;
-            }
+            if (error)
+                throw rest_exception(fmt::format("Couldn't resolve address - {}: {}", error.value(), error.message().c_str()).c_str());
 
             // could be better ipv6 and ipv4 resolution
             for (const auto &endpoint: results) {
                 this->remote = endpoint;
+                // enforce user specified port
                 if (port)
                     this->remote.port(port);
                 break;
@@ -188,34 +194,36 @@ namespace pterocxx {
         SSL_set_tlsext_host_name(connection->native_handle(), host.c_str());
     }
 
-    rest::~rest() {
+    rest_client::~rest_client() {
         // wait for requests to finish
         auto lock = std::lock_guard<std::mutex>(this->io_lock);
         delete connection;
     }
 
-    void rest::init() {
+    bool rest_client::is_busy() {
+        return !this->io_lock.try_lock();
+    }
+
+    void rest_client::init() {
         if (connection == nullptr)
             return;
 
         boost::system::error_code error;
         this->connection->lowest_layer().connect(this->remote, error);
-        if (error) {
-            printf("Rest connect ERROR:  %d - %s\n", error.value(), error.message().c_str());
-            return;
-        }
+        if (error)
+            throw rest_exception(fmt::format("Couldn't connect - {}: {}", error.value(), error.message().c_str()).c_str());
         this->connection->handshake(ssl::stream_base::handshake_type::client);
         this->io_ctx.run();
     }
 
-    void rest::term() {
+    void rest_client::term() {
         if (connection == nullptr)
             return;
         this->connection->shutdown();
     }
 
-    void rest::request(const rest_request_s &request,
-                       const rest_response_handler_t &response_handler) {
+    void rest_client::request(const rest_request_s &request,
+                              const rest_response_handler_t &response_handler) {
         if (this->connection == nullptr)
             return;
 
@@ -276,4 +284,5 @@ namespace pterocxx {
             }
         });
     }
+
 }

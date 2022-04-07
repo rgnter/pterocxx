@@ -6,12 +6,9 @@
 #define PTEROCXX_TYPES_HPP
 
 #include <vector>
-#include <cstdint>
-#include <string_view>
 #include <nlohmann/json.hpp>
 
 namespace pterocxx {
-
 
     /**
      * Base object.
