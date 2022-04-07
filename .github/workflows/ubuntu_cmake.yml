@@ -1,4 +1,4 @@
-name: "CMake Ubuntu"
+name: "Build Linux"
 on:
   push:
     branches: [ master ]
