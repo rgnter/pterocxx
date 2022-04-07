@@ -5,7 +5,6 @@
 #ifndef PTEROCXX_REST_HPP
 #define PTEROCXX_REST_HPP
 
-
 #include <cstdarg>
 #include <boost/asio.hpp>
 #include <nlohmann/json.hpp>

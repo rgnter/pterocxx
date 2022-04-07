@@ -7,14 +7,6 @@
 
 namespace pterocxx {
 
-    /**
-     *
-     * @tparam T
-     * @param key
-     * @param default_value
-     * @param attributes
-     * @return
-     */
     template<typename T>
     nlohmann::json::value_type
     read_attribute(const T &key, nlohmann::json::value_type default_value, const nlohmann::json &attributes) {
@@ -23,6 +15,15 @@ namespace pterocxx {
             return default_value;
         return value;
     }
+
+
+
+    void error_s::build_from_attributes(const nlohmann::json &attributes) {
+        this->code   = std::string(attributes["code"]);
+        this->detail = std::string(attributes["detail"]);
+        this->status = std::string(attributes["status"]);
+    }
+
 
     void user_s::build_from_attributes(const nlohmann::json &attributes) {
         this->id = attributes["id"];
@@ -55,4 +56,6 @@ namespace pterocxx {
                 read_attribute("updated_at", "null", attributes)
         );
     }
+
+
 }

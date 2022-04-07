@@ -9,6 +9,37 @@
 
 namespace pterocxx {
 
+
+    void base_response::parse(const nlohmann::json &json) {
+        if (json.contains("errors")) {
+            for (const auto &error_json: json["errors"]) {
+                pterocxx::error_s error;
+                error.build_from_attributes(error_json);
+                errors.emplace_back(error);
+            }
+        }
+    }
+
+    void get_users_response_s::parse(const nlohmann::json &json) {
+        base_response::parse(json);
+        pterocxx::list_object_s<pterocxx::user_s> user_list;
+        user_list.build_from_attributes(json);
+        this->users = std::move(user_list);
+    }
+
+    void get_user_details_response_s::parse(const nlohmann::json &json) {
+        base_response::parse(json);
+        if (json.contains("attributes")) {
+            user_s user;
+            user.build_from_attributes(json["attributes"]);
+            this->user = user;
+        }
+    }
+
+    bool base_response::has_errors() {
+        return !this->errors.empty();
+    }
+
     application::application(std::string host,
                              std::string app_key,
                              uint16_t port,
@@ -48,20 +79,6 @@ namespace pterocxx {
         should_run.wait(thread_guard);
     }
 
-    std::vector<pterocxx::error_s> find_errors(const nlohmann::json &json) {
-        std::vector<pterocxx::error_s> errors;
-        if (json.contains("errors")) {
-            for (const auto &error_json: json["errors"]) {
-                errors.emplace_back(pterocxx::error_s{
-                        .code = std::string(error_json["code"]),
-                        .detail = std::string(error_json["detail"]),
-                        .status = std::string(error_json["status"])
-                });
-            }
-        }
-        return errors;
-    }
-
 
     void application::get_users(const get_users_response_handler_t &handler) {
         auto request = pterocxx::rest_request_s{
@@ -71,20 +88,13 @@ namespace pterocxx {
         };
         this->rest->request(request, [request, handler](const rest_response_s &response) {
             try {
-                const auto &response_json = nlohmann::json::parse(response.body);
-
-                get_users_response_s api_response;
-                api_response.errors = std::move(find_errors(response_json));
-
-                for (const auto &entry: response_json["data"]) {
-                    user_s entry_user;
-                    entry_user.build_from_attributes(entry["attributes"]);
-                    api_response.users.push_back(entry_user);
-                }
-
+                const auto response_json = nlohmann::json::parse(response.body);
+                pterocxx::get_users_response_s api_response;
+                api_response.parse(response_json);
                 handler(api_response);
             } catch (const std::exception &x) {
-                printf("API endpoint %s ERROR: %s\n", request.endpoint.c_str(), x.what());
+                printf("API endpoint %s ERROR: %s\n\tResponse Body: %s\n", request.endpoint.c_str(), x.what(),
+                       response.body.c_str());
             }
 
         });
@@ -94,7 +104,7 @@ namespace pterocxx {
                                        const get_user_details_response_handler_t &handler,
                                        bool include_servers) {
         auto query = pterocxx::query_s();
-        if(include_servers)
+        if (include_servers)
             query["include"] += "servers";
 
         auto request = make_get_request(fmt::format("/api/application/users/{}", user_id),
@@ -108,24 +118,13 @@ namespace pterocxx {
 
                 {
                     pterocxx::get_user_details_response_s api_response;
-                    api_response.errors = std::move(find_errors(response_json));
-
-                    pterocxx::user_s user;
-                    if (response_json.contains("attributes") &&
-                        response_json.contains("object") &&
-                        response_json["object"] == "user") {
-                        user.build_from_attributes(response_json["attributes"]);
-                        api_response.user = std::move(user);
-                    }
-
                     handler(api_response);
-                    printf("%s\n", response_json.dump(4).c_str());
                 }
             } catch (const std::exception &x) {
-                printf("API endpoint %s ERROR: %s\n", request.endpoint.c_str(), x.what());
+                printf("API endpoint %s ERROR: %s\n\tResponse Body: %s\n", request.endpoint.c_str(), x.what(),
+                       response.body.c_str());
             }
         });
     }
-
 
 }

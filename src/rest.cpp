@@ -225,7 +225,6 @@ namespace pterocxx {
             // write request
             {
                 std::string raw_request = gen_raw_request(request);
-                printf("%s\n", raw_request.c_str());
                 this->connection->write_some(
                         asio::const_buffer(raw_request.data(), raw_request.size())
                 );

@@ -5,6 +5,11 @@
 #ifndef PTEROCXX_PTEROCXX_HPP
 #define PTEROCXX_PTEROCXX_HPP
 
+#ifdef WIN32
+#define _WIN32_WINNT_WIN7
+#endif
+
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -21,6 +26,11 @@ namespace pterocxx {
     struct base_response {
     public:
         std::vector<pterocxx::error_s> errors;
+
+    public:
+        virtual void parse(const nlohmann::json& json);
+    public:
+        bool has_errors();
     };
 
     /**
@@ -29,7 +39,9 @@ namespace pterocxx {
     struct get_users_response_s
             : base_response {
     public:
-        std::vector<pterocxx::user_s> users;
+        pterocxx::list_object_s<pterocxx::user_s> users;
+    public:
+        void parse(const nlohmann::json& json);
     };
     /**
      * Get users handler.
@@ -44,6 +56,8 @@ namespace pterocxx {
             : base_response {
     public:
         pterocxx::user_s user;
+    public:
+        void parse(const nlohmann::json& json);
     };
     /**
      * Get user details handler.

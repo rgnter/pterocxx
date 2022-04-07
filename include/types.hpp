@@ -14,22 +14,57 @@ namespace pterocxx {
 
 
     /**
-     * Structure holding error information.
+     * Base object.
      */
-    struct error_s {
+    struct base_object_s {
+    public:
+        virtual void build_from_attributes(const nlohmann::json &attributes) = 0;
+    };
+
+    /**
+     * List object.
+     */
+     template<class T>
+    struct list_object_s : base_object_s {
+    public:
+        std::vector<T> data;
+    public:
+        void build_from_attributes(const nlohmann::json &attributes) override {
+            if(!attributes.contains("data"))
+                return;
+            for (const auto &entry : attributes["data"]) {
+                T obj;
+                obj.build_from_attributes(entry["attributes"]);
+                this->data.emplace_back(obj);
+            }
+        }
+    };
+
+
+    /**
+     * Error object.
+     */
+    struct error_s : base_object_s {
     public:
         std::string code;
         std::string detail;
         std::string status;
+    public:
+        /**
+         * Builds error from json attributes.
+         * @param attributes Attributes.
+         */
+        void build_from_attributes(const nlohmann::json &attributes) override;
     };
+
 
     typedef uint32_t user_id_t;
     typedef std::string user_external_id_t;
 
     /**
-     * Structure holding user information.
+     * User object.
      */
-    struct user_s {
+    struct user_s : base_object_s {
     public:
         user_id_t id;
         user_external_id_t external_id;
@@ -47,11 +82,15 @@ namespace pterocxx {
         std::string created_at;
         std::string updated_at;
     public:
-        void build_from_attributes(const nlohmann::json& attributes);
+        /**
+         * Builds error from json attributes.
+         * @param attributes Attributes.
+         */
+        void build_from_attributes(const nlohmann::json &attributes) override;
     };
 
     /**
-     * Structure holding allocation information of server.
+     * Allocation object.
      */
     struct allocation_s {
     public:
@@ -65,7 +104,7 @@ namespace pterocxx {
     };
 
     /**
-     * Structure holding limits information of server.
+     * Limits object.
      */
     struct limits_s {
     public:
@@ -77,7 +116,7 @@ namespace pterocxx {
     };
 
     /**
-     * Structure holding feature limits information of server.
+     * Feature Limits object.
      */
     struct feature_limits_s {
     public:
@@ -87,26 +126,7 @@ namespace pterocxx {
     };
 
     /**
-     * Structure holding pagination information.
-     */
-    struct pagination_s {
-    public:
-        uint32_t total;
-        uint32_t count;
-        uint32_t per_page;
-        uint32_t current_page;
-        uint32_t total_pages;
-
-        std::vector<std::string_view> links;
-    };
-
-    struct meta_s {
-    public:
-        pterocxx::pagination_s pagination;
-    };
-
-    /**
-     * Structure holding server information.
+     * Server object.
      */
     struct server_s {
     public:
@@ -126,8 +146,6 @@ namespace pterocxx {
         bool is_installing;
 
         std::vector<pterocxx::allocation_s> allocations;
-
-        pterocxx::meta_s meta;
     };
 }
 

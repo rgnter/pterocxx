@@ -17,12 +17,11 @@ int main() {
     pterocxx::application app("panel.battleland.eu", provide_app_key());
     app.init();
 
-
-
-    // get user
-    app.get_user_details(3, [](const pterocxx::get_user_details_response_s &response) {
-        printf("%d\n", response.user.id);
-    }, true);
+    app.get_users([](const pterocxx::get_users_response_s& response) {
+        for (const auto &user : response.users.data) {
+            printf("%s\n", user.first_name.c_str());
+        }
+    });
 
     app.sync();
 }
