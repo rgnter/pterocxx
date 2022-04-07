@@ -10,6 +10,7 @@
 #include <memory>
 #include <cstdint>
 
+#include "cache.hpp"
 #include "types.hpp"
 #include "rest.hpp"
 
@@ -122,6 +123,9 @@ namespace pterocxx {
 
     private:
         pterocxx::rest_client *rest;
+
+    private:
+        bool use_cache;
 
     public:
         /**

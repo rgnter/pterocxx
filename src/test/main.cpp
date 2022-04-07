@@ -21,18 +21,18 @@ std::string provide_app_key() {
 int main() {
     // constructs application on panel.example.net
     // uses default https port so the rest client is using secured connection
-    pterocxx::application app("panel.example.net",
-                              "app_key"
+    pterocxx::application app("panel.battleland.eu",
+                            provide_app_key()
             // port = 443,          Server port
             // app_name="pterocxx"  Used in user agent when sending requests
     );
 
     app.init();
-    app.cr([](const pterocxx::delete_user_response_s& response) {
-        if(!response.successful)
-            for (const auto &error : response.errors) {
-                printf("Error: %s, %s, %s\n", error.detail.c_str(), error.code.c_str(), error.status.c_str());
-            }
+    app.get_users([](const pterocxx::get_users_response_s& response) {
+        for (const auto &item : response.users.data) {
+            pterocxx::user_cache.store(item.id, item);
+        }
+        printf("%s\n", pterocxx::user_cache.retrieve(18)->username.c_str());
     });
 
     app.sync();

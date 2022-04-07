@@ -22,7 +22,7 @@ conan_cmake_install(PATH_OR_REFERENCE .
         REMOTE conancenter
         SETTINGS ${settings})
 
-set(PTEROCXX_HEADERS include/pterocxx.hpp include/rest.hpp)
+set(PTEROCXX_HEADERS include/pterocxx.hpp include/rest.hpp include/cache.hpp)
 set(PTEROCXX_SOURCES src/application.cpp src/rest.cpp include/types.hpp src/types.cpp)
 set(PTEROCXX_TEST_SOURCES src/test/main.cpp)
 
