@@ -1,5 +1,7 @@
 # pterocxx
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/cc1571a8ba3d4c2c8feb28a4bcd1a761)](https://www.codacy.com/gh/rgnter/pterocxx/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=rgnter/pterocxx&amp;utm_campaign=Badge_Grade)
+
+
 Lightweight pterodactyl API library written in c++.
 
 ## Developers
