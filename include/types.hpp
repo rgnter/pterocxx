@@ -15,7 +15,15 @@ namespace pterocxx {
      */
     struct base_object_s {
     public:
+        /**
+         * Read object from JSON
+         * @param object Object JSON
+         */
         virtual void read_object(const nlohmann::json &object) = 0;
+        /**
+         * Write object to JSON
+         * @return Object JSON
+         */
         virtual nlohmann::json write_object() const = 0;
     };
 
@@ -27,17 +35,25 @@ namespace pterocxx {
     public:
         std::vector<T> data;
     public:
-        void read_object(const nlohmann::json &attributes) override {
-            if(!attributes.contains("data"))
+        /**
+         * Read list object from JSON
+         * @param object JSON
+         */
+        inline void read_object(const nlohmann::json &object) override {
+            if(!object.contains("data"))
                 return;
-            for (const auto &entry : attributes["data"]) {
+            for (const auto &entry : object["data"]) {
                 T obj;
-                obj.read_object(entry["attributes"]);
+                obj.read_object(entry["object"]);
                 this->data.emplace_back(obj);
             }
         }
-
-        nlohmann::json write_object() const override {
+        /**
+         * Write list object to JSON
+         * @return JSON
+         */
+        inline nlohmann::json write_object() const override {
+            // todo
             return nlohmann::json();
         };
     };
@@ -52,10 +68,15 @@ namespace pterocxx {
         std::string status;
     public:
         /**
-         * Builds error from json attributes.
-         * @param attributes Attributes.
+         * Reads error object from JSON
+         * @param attributes JSON
          */
         void read_object(const nlohmann::json &attributes) override;
+
+        /**
+         * Write object to JSON
+         * @return Object JSON
+         */
         nlohmann::json write_object() const override;
     };
 
@@ -73,14 +94,14 @@ namespace pterocxx {
         bool oom_disabled;
     public:
         /**
-         * Builds limits from json attributes.
-         * @param attributes Attributes.
+         * Reads limits object from JSON
+         * @param attributes JSON
          */
         void read_object(const nlohmann::json &attributes) override;
 
         /**
-         * Builds limits attributes
-         * @return JSON attributes.
+         * Write object to JSON
+         * @return Object JSON
          */
         nlohmann::json write_object() const override;
     };
@@ -95,14 +116,14 @@ namespace pterocxx {
         uint32_t backups;
     public:
         /**
-         * Builds feature limits from json attributes.
-         * @param attributes Attributes.
+         * Reads feature limits object from JSON
+         * @param attributes JSON
          */
         void read_object(const nlohmann::json &attributes) override;
 
         /**
-         * Builds limits attributes
-         * @return JSON attributes.
+         * Write object to JSON
+         * @return Object JSON
          */
         nlohmann::json write_object() const override;
     };
@@ -122,13 +143,13 @@ namespace pterocxx {
         std::string updated_at;
     public:
         /**
-         * Builds node from json attributes.
-         * @param attributes Attributes.
+         * Reads location object from JSON
+         * @param attributes JSON
          */
         void read_object(const nlohmann::json &attributes) override;
         /**
-         * Builds location attributes
-         * @return JSON attributes.
+         * Write object to JSON
+         * @return Object JSON
          */
         nlohmann::json write_object() const override;
     };
@@ -169,13 +190,13 @@ namespace pterocxx {
         std::string updated_at;
     public:
         /**
-         * Builds node from json attributes.
-         * @param attributes Attributes.
+         * Reads node object from JSON
+         * @param attributes JSON
          */
         void read_object(const nlohmann::json &attributes) override;
         /**
-         * Builds node attributes
-         * @return JSON attributes.
+         * Write object to JSON
+         * @return Object JSON
          */
         nlohmann::json write_object() const override;
     };
@@ -199,14 +220,14 @@ namespace pterocxx {
         bool is_default;
     public:
         /**
-         * Builds allocation from json attributes.
-         * @param attributes Attributes.
+         * Reads allocation object from JSON
+         * @param attributes JSON
          */
         void read_object(const nlohmann::json &attributes) override;
 
         /**
-         * Builds allocation attributes
-         * @return JSON attributes.
+         * Write object to JSON
+         * @return Object JSON
          */
         nlohmann::json write_object()  const override;
     };
@@ -248,13 +269,13 @@ namespace pterocxx {
         std::vector<pterocxx::allocation_s> allocations;
     public:
         /**
-         * Builds server from json attributes.
-         * @param attributes Attributes.
+         * Reads server object from JSON
+         * @param attributes JSON
          */
         void read_object(const nlohmann::json &attributes) override;
         /**
-         * Builds server attributes
-         * @return JSON attributes.
+         * Write object to JSON
+         * @return Object JSON
          */
         nlohmann::json write_object()  const override;
     };
@@ -294,20 +315,16 @@ namespace pterocxx {
 
     public:
         /**
-         * Builds error from json attributes.
-         * @param attributes Attributes.
+         * Reads user object from JSON
+         * @param attributes JSON
          */
         void read_object(const nlohmann::json &attributes) override;
         /**
-         * Builds user attributes
-         * @return JSON attributes.
+         * Write object to JSON
+         * @return Object JSON
          */
         nlohmann::json write_object() const override;
     };
-
-
-
-
 }
 
 #endif //PTEROCXX_TYPES_HPP

@@ -12,6 +12,10 @@
 
 namespace pterocxx {
 
+    /**
+     * Cache
+     * @tparam T Stored type
+     */
     template<typename T>
     class cache {
     private:
@@ -22,7 +26,7 @@ namespace pterocxx {
          * @param id  ID
          * @return Value ptr
          */
-        std::shared_ptr<T> retrieve(uint32_t id) {
+        inline std::shared_ptr<T> retrieve(uint32_t id) {
             if(this->cache_map.contains(id))
                 return this->cache_map[id];
             return std::shared_ptr<T>();
@@ -33,7 +37,7 @@ namespace pterocxx {
          * @param value Value
          * @return Value ptr
          */
-        std::shared_ptr<T> store(uint32_t id, T value) {
+        inline std::shared_ptr<T> store(uint32_t id, T value) {
             this->cache_map[id] = std::make_shared<T>(value);
             return this->cache_map[id];
         }
