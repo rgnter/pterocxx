@@ -2,7 +2,7 @@
 Pterodactyl API in C++.
 ## Developers
 ### General
-Construct application.
+Construct application:
 ```cxx
 // constructs application connecting to panel.example.net
 // uses default https port so the rest client is using secured connection
@@ -17,7 +17,18 @@ app.init();
 // synchronize with application thread
 app.sync();
 ```
-
+Error checking:
+```cxx
+// if error is thrown by remote, it can be queried.
+app.any_request([](const pterocxx::any_response& response) {
+  // response.successful is set to false, when remote response code is not appropriate.
+  if(!response.sucessful)
+      // iterate through errors, print them
+      for (const auto &error : response.errors) {
+          printf("Error: %s, %s, %s\n", error.detail.c_str(), error.code.c_str(), error.status.c_str());
+      }
+});
+```
 ## User API
 ### Get users
 Retrieve all users.
