@@ -8,8 +8,7 @@ Lightweight pterodactyl API library written in c++.
 ### General
 Constructing application:
 ```cxx
-// constructs application connecting to panel.example.net
-// uses default https port so the rest client is using secured connection
+// constructs application
 pterocxx::application app("panel.example.net",
                           "app_key"
                         // port = 443,          Server port
