@@ -6,7 +6,23 @@ Lightweight pterodactyl API library written in c++.
 
 ## Developers
 ### General
-Constructing application:
+### Setup CMake
+Clone pterocxx repository,
+```bash
+git submodule add https://github.com/rgnter/pterocxx vendor/pterocxx
+```
+add it as a subproject in CMake, and link aganist it.
+```cmake
+# Add pterocxx subproject
+add_subdirectory(vendor/pterocxx)
+
+# Include & Link pterocxx
+include_directories(vendor/pterocxx/include)
+link_libraries(pterocxx)
+```
+### Basic API
+#### General
+To do anything, you will need `pterocxx::application` instance,
 ```cxx
 // constructs application
 pterocxx::application app("panel.example.net",
@@ -20,7 +36,10 @@ app.init();
 // synchronize with application thread
 app.sync();
 ```
-Error handling:
+it contains info such as endpoint *hostname*, *application key*, *endpoint port* & *optional application name*.
+Application is then **intialized** with `pterocxx::application::init`, it spawns thread and begins work. You can **sychronize** with the spawned thread by calling `pterocxx::application::sync`. Application is **terminated** by calling `pterocxx::application::term`
+#### Errors
+Endpoint can return errors when calling any request, you can query them as such:
 ```cxx
 app.any_request([](const pterocxx::any_response& response) {
   if(!response.successful)
@@ -29,6 +48,10 @@ app.any_request([](const pterocxx::any_response& response) {
       }
 });
 ```
+you can read more about errors on [Pterodactyl API Reference](https://dashflo.net/docs/api/pterodactyl/v1/).
+#### Naming Conventions
+Every request has name, such as `get_users`, `get_servers`. Every request has response which name begins with *(request_name)\_response\_(s - struct)*, such as `get_users_response`, `get_servers_response`.
+
 ### User API
 #### Get users
 Retrieve all users.
