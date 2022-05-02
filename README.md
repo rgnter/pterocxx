@@ -5,8 +5,10 @@
 Lightweight pterodactyl API library written in c++.
 
 ## Developers
-### General
 ### Setup CMake
+Prerequisites:
+- Conan
+
 Clone pterocxx repository,
 ```bash
 git submodule add https://github.com/rgnter/pterocxx vendor/pterocxx
